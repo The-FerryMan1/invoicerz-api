@@ -6,10 +6,20 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/cors": "^1.4.0",
+    "better-auth": "^1.4.4",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "elysia": "latest",
+    "nodemailer": "^7.0.11",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@types/nodemailer": "^7.0.4",
+    "@types/pg": "^8.15.6",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.31.7",
+    "tsx": "^4.21.0"
   },
   "module": "src/index.js"
 }
