@@ -59,6 +59,8 @@ export namespace ClientService {
       .select()
       .from(Clients)
       .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)));
+
+    if (!client) throw status(404, "Not Found");
     return client;
   }
 
@@ -108,8 +110,13 @@ export namespace ClientService {
     if (isNaN(clientIDInt))
       throw status(400, "Client ID should be numeric or access denied.");
 
-    await db
+    const [deletedClientID] = await db
       .delete(Clients)
-      .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)));
+      .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)))
+      .returning({ id: Clients.id });
+
+    if (!deletedClientID) throw status(404, "Not Found");
+
+    return;
   }
 }
