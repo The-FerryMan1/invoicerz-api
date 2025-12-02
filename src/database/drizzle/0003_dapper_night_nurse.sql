@@ -1,0 +1,1 @@
+ALTER TABLE "client" ALTER COLUMN "user_id" SET NOT NULL;

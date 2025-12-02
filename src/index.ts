@@ -1,7 +1,19 @@
 import { Elysia } from "elysia";
 import { auth } from "./utils/auth";
 import cors from "@elysiajs/cors";
+import { clients } from "./modules/clients";
+import { openapi } from "@elysiajs/openapi";
+
+import { OpenAPI } from "./utils/auth";
 const app = new Elysia({ prefix: "/api" })
+  .use(
+    openapi({
+      documentation: {
+        components: await OpenAPI.components,
+        paths: await OpenAPI.getPaths(),
+      },
+    })
+  )
   .use(
     cors({
       origin: "http://localhost:3000",
@@ -11,6 +23,7 @@ const app = new Elysia({ prefix: "/api" })
     })
   )
   .mount(auth.handler)
+  .use(clients)
   .listen(3000);
 
 console.log(

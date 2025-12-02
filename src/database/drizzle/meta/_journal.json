@@ -8,6 +8,27 @@
       "when": 1764576580217,
       "tag": "0000_groovy_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764657308816,
+      "tag": "0001_smiling_menace",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764659129856,
+      "tag": "0002_mighty_ego",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764659181256,
+      "tag": "0003_dapper_night_nurse",
+      "breakpoints": true
     }
   ]
 }
