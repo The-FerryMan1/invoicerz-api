@@ -60,7 +60,7 @@ export namespace ClientService {
       .from(Clients)
       .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)));
 
-    if (!client) throw status(404, "Not Found");
+    if (!client) throw status(404, "Not Found or Access denied.");
     return client;
   }
 
@@ -97,6 +97,8 @@ export namespace ClientService {
       })
       .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)))
       .returning();
+
+    if (!updatedClient) throw status(404, "Not Found or Access denied");
 
     return updatedClient;
   }
