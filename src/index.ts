@@ -5,6 +5,7 @@ import { clients } from "./modules/clients";
 import { openapi } from "@elysiajs/openapi";
 
 import { OpenAPI } from "./utils/auth";
+import { productService } from "./modules/products-services";
 const app = new Elysia({ prefix: "/api" })
   .use(
     openapi({
@@ -24,6 +25,7 @@ const app = new Elysia({ prefix: "/api" })
   )
   .mount(auth.handler)
   .use(clients)
+  .use(productService)
   .listen(3000);
 
 console.log(
