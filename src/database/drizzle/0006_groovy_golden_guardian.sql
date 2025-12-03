@@ -1,0 +1,2 @@
+ALTER TABLE "lineitems" ADD COLUMN "productservice_id" integer NOT NULL;--> statement-breakpoint
+ALTER TABLE "lineitems" ADD CONSTRAINT "lineitems_productservice_id_productservice_id_fk" FOREIGN KEY ("productservice_id") REFERENCES "public"."productservice"("id") ON DELETE cascade ON UPDATE no action;
