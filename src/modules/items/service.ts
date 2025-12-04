@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../database";
-import { LineItems } from "../../database/schema/schema";
+import { Invoices, LineItems } from "../../database/schema/schema";
 import { ItemsModel } from "./model";
 import { status } from "elysia";
 
@@ -15,18 +15,48 @@ export namespace ItemsService {
     }: ItemsModel.itemsBody,
     userID: string
   ) {
-    const [newLineitem] = await db
-      .insert(LineItems)
-      .values({
-        description,
-        invoiceID,
-        productServiceID,
-        quantity,
-        unitPrice,
-        userID,
-        lineTotal: sql`${quantity} * ${unitPrice}`,
-      })
-      .returning();
+    const newLineitem = await db.transaction(async (tx) => {
+      const [newLineitem] = await tx
+        .insert(LineItems)
+        .values({
+          description,
+          invoiceID,
+          productServiceID,
+          quantity,
+          unitPrice,
+          userID,
+          lineTotal: sql`${quantity} * ${unitPrice}`,
+        })
+        .returning();
+
+      const [invoiceHeader] = await tx
+        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
+        .from(Invoices)
+        .where(eq(Invoices.id, invoiceID));
+
+      const [lineItems] = await tx
+        .select({
+          newSubTotal: sql<number>`sum(${LineItems.lineTotal})`,
+        })
+        .from(LineItems)
+        .where(
+          and(eq(LineItems.userID, userID), eq(LineItems.invoiceID, invoiceID))
+        );
+
+      const taxableBase = lineItems.newSubTotal - invoiceHeader.discount;
+      const taxAmount = taxableBase * (invoiceHeader.taxRate / 100);
+      const newTotalAmount = taxableBase + taxAmount;
+
+      await tx
+        .update(Invoices)
+        .set({
+          subtotal: lineItems.newSubTotal,
+          totalAmount: newTotalAmount,
+        })
+        .where(and(eq(Invoices.id, invoiceID)));
+
+      return newLineitem;
+    });
 
     return newLineitem;
   }
@@ -73,24 +103,50 @@ export namespace ItemsService {
     if (isNaN(lineItemIDInt))
       throw status(400, "Bad Request, Parameter should be numeric.");
 
-    const [updatedLineItem] = await db
-      .update(LineItems)
-      .set({
-        description,
-        invoiceID,
-        productServiceID,
-        quantity,
-        unitPrice,
-        lineTotal: sql`${quantity} * ${unitPrice}`,
-      })
-      .where(and(eq(LineItems.id, lineItemIDInt), eq(LineItems.userID, userID)))
-      .returning();
+    const updatedLineItem = await db.transaction(async (tx) => {
+      const [updatedLineItem] = await db
+        .update(LineItems)
+        .set({
+          description,
+          invoiceID,
+          productServiceID,
+          quantity,
+          unitPrice,
+          lineTotal: sql`${quantity} * ${unitPrice}`,
+        })
+        .where(
+          and(eq(LineItems.id, lineItemIDInt), eq(LineItems.userID, userID))
+        )
+        .returning();
 
-    if (!updatedLineItem)
-      throw status(
-        500,
-        "Internal Server Error: Failed to retrieve updated record."
-      );
+      const [invoiceHeader] = await tx
+        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
+        .from(Invoices)
+        .where(eq(Invoices.id, invoiceID));
+
+      const [lineItems] = await tx
+        .select({
+          newSubTotal: sql<number>`sum(${LineItems.lineTotal})`,
+        })
+        .from(LineItems)
+        .where(
+          and(eq(LineItems.userID, userID), eq(LineItems.invoiceID, invoiceID))
+        );
+
+      const taxableBase = lineItems.newSubTotal - invoiceHeader.discount;
+      const taxAmount = taxableBase * (invoiceHeader.taxRate / 100);
+      const newTotalAmount = taxableBase + taxAmount;
+
+      await tx
+        .update(Invoices)
+        .set({
+          subtotal: lineItems.newSubTotal,
+          totalAmount: newTotalAmount,
+        })
+        .where(and(eq(Invoices.id, invoiceID)));
+
+      return updatedLineItem;
+    });
 
     return updatedLineItem;
   }
@@ -103,10 +159,45 @@ export namespace ItemsService {
     if (isNaN(lineItemIDInt))
       throw status(400, "Bad Request, Parameter should be numeric.");
 
-    const [deletedLineItemID] = await db
-      .delete(LineItems)
-      .where(and(eq(LineItems.id, lineItemIDInt), eq(LineItems.userID, userID)))
-      .returning({ id: LineItems.id });
+    const deletedLineItemID = await db.transaction(async (tx) => {
+      const [deletedLineItemID] = await db
+        .delete(LineItems)
+        .where(
+          and(eq(LineItems.id, lineItemIDInt), eq(LineItems.userID, userID))
+        )
+        .returning();
+
+      const [invoiceHeader] = await tx
+        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
+        .from(Invoices)
+        .where(eq(Invoices.id, deletedLineItemID.invoiceID));
+
+      const [lineItems] = await tx
+        .select({
+          newSubTotal: sql<number>`sum(${LineItems.lineTotal})`,
+        })
+        .from(LineItems)
+        .where(
+          and(
+            eq(LineItems.userID, userID),
+            eq(LineItems.invoiceID, deletedLineItemID.invoiceID)
+          )
+        );
+
+      const taxableBase = lineItems.newSubTotal - invoiceHeader.discount;
+      const taxAmount = taxableBase * (invoiceHeader.taxRate / 100);
+      const newTotalAmount = taxableBase + taxAmount;
+
+      await tx
+        .update(Invoices)
+        .set({
+          subtotal: lineItems.newSubTotal,
+          totalAmount: newTotalAmount,
+        })
+        .where(and(eq(Invoices.id, deletedLineItemID.invoiceID)));
+
+      return deletedLineItemID;
+    });
 
     if (!deletedLineItemID) throw status(404, "Not Found or Access denied.");
     return;

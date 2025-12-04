@@ -62,6 +62,11 @@ export const Invoices = pgTable("invoice", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  discount: numeric("discount", {
+    mode: "number",
+    precision: 10,
+    scale: 2,
+  }).notNull(),
   notes: text("notes"),
 });
 

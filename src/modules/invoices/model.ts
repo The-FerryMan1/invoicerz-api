@@ -9,6 +9,7 @@ export namespace InvoicesModel {
     clientID: t.Number(),
     dueDate: t.Date(),
     taxRate: t.Numeric(),
+    discount: t.Numeric(),
     notes: t.Union([t.String(), t.Null()]),
   });
 
@@ -25,6 +26,7 @@ export namespace InvoicesModel {
     taxRate: t.Numeric(),
     totalAmount: t.Numeric(),
     notes: t.Union([t.String(), t.Null()]),
+    discount: t.Numeric(),
   });
 
   export type invoiceResponse = typeof invoiceResponse.static;

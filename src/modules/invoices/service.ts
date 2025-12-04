@@ -6,7 +6,7 @@ import { status } from "elysia";
 
 export namespace InvoicesService {
   export async function createInvoiceHeader(
-    { clientID, dueDate, notes, taxRate }: InvoicesModel.invoiceBody,
+    { clientID, dueDate, notes, taxRate, discount }: InvoicesModel.invoiceBody,
     userID: string
   ) {
     const countInvoices = await db.$count(
@@ -28,6 +28,7 @@ export namespace InvoicesService {
         totalAmount: 0,
         userID,
         notes,
+        discount,
       })
       .returning();
 
