@@ -9,13 +9,19 @@ export namespace InvoicesService {
     { clientID, dueDate, notes, taxRate }: InvoicesModel.invoiceBody,
     userID: string
   ) {
+    const countInvoices = await db.$count(
+      Invoices,
+      eq(Invoices.userID, userID)
+    );
+
     const [newInvoiceHeader] = await db
       .insert(Invoices)
       .values({
         clientID,
-        dueDate: String(dueDate),
+        dueDate: dueDate.toISOString(),
         invoiceNumber: `INV-${new Date(Date.now()).getFullYear()}-${(
-          "0000" + Invoices.id
+          "0000" +
+          (countInvoices + 1)
         ).slice(-4)}`,
         subtotal: 0,
         taxRate,
