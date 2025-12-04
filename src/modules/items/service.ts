@@ -1,6 +1,10 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../database";
-import { Invoices, LineItems } from "../../database/schema/schema";
+import {
+  Invoices,
+  LineItems,
+  ProductService,
+} from "../../database/schema/schema";
 import { ItemsModel } from "./model";
 import { status } from "elysia";
 
@@ -16,6 +20,22 @@ export namespace ItemsService {
     userID: string
   ) {
     const newLineitem = await db.transaction(async (tx) => {
+      const [invoiceHeader] = await tx
+        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
+        .from(Invoices)
+        .where(eq(Invoices.id, invoiceID));
+
+      if (!invoiceHeader) throw status(404, "Invoice Not Found");
+
+      const checkService = await tx.$count(
+        ProductService,
+        eq(ProductService.id, productServiceID)
+      );
+
+      if (checkService === 0) throw status(404, "Service/Product Not Found.");
+
+      const newLineTotal = quantity * unitPrice;
+
       const [newLineitem] = await tx
         .insert(LineItems)
         .values({
@@ -25,14 +45,9 @@ export namespace ItemsService {
           quantity,
           unitPrice,
           userID,
-          lineTotal: sql`${quantity} * ${unitPrice}`,
+          lineTotal: newLineTotal,
         })
         .returning();
-
-      const [invoiceHeader] = await tx
-        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
-        .from(Invoices)
-        .where(eq(Invoices.id, invoiceID));
 
       const [lineItems] = await tx
         .select({
@@ -104,6 +119,22 @@ export namespace ItemsService {
       throw status(400, "Bad Request, Parameter should be numeric.");
 
     const updatedLineItem = await db.transaction(async (tx) => {
+      const [invoiceHeader] = await tx
+        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
+        .from(Invoices)
+        .where(eq(Invoices.id, invoiceID));
+
+      if (!invoiceHeader) throw status(404, "Invoice Not Found");
+
+      const checkService = await tx.$count(
+        ProductService,
+        eq(ProductService.id, productServiceID)
+      );
+
+      if (checkService === 0) throw status(404, "Service/Product Not Found.");
+
+      const newLineTotal = quantity * unitPrice;
+
       const [updatedLineItem] = await db
         .update(LineItems)
         .set({
@@ -112,17 +143,12 @@ export namespace ItemsService {
           productServiceID,
           quantity,
           unitPrice,
-          lineTotal: sql`${quantity} * ${unitPrice}`,
+          lineTotal: newLineTotal,
         })
         .where(
           and(eq(LineItems.id, lineItemIDInt), eq(LineItems.userID, userID))
         )
         .returning();
-
-      const [invoiceHeader] = await tx
-        .select({ taxRate: Invoices.taxRate, discount: Invoices.discount })
-        .from(Invoices)
-        .where(eq(Invoices.id, invoiceID));
 
       const [lineItems] = await tx
         .select({

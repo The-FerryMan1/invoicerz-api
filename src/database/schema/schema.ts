@@ -51,7 +51,9 @@ export const Invoices = pgTable("invoice", {
     mode: "number",
     precision: 10,
     scale: 2,
-  }).notNull(),
+  })
+    .notNull()
+    .default(0.0),
   taxRate: numeric("tax_rate", {
     mode: "number",
     precision: 5,
@@ -61,12 +63,16 @@ export const Invoices = pgTable("invoice", {
     mode: "number",
     precision: 10,
     scale: 2,
-  }).notNull(),
+  })
+    .notNull()
+    .default(0.0),
   discount: numeric("discount", {
     mode: "number",
     precision: 10,
     scale: 2,
-  }).notNull(),
+  })
+    .notNull()
+    .default(0.0),
   notes: text("notes"),
 });
 
