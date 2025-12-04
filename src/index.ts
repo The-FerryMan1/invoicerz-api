@@ -7,6 +7,7 @@ import { openapi } from "@elysiajs/openapi";
 import { OpenAPI } from "./utils/auth";
 import { productService } from "./modules/products-services";
 import { lineItems } from "./modules/items";
+import { invoices } from "./modules/invoices";
 const app = new Elysia({ prefix: "/api" })
   .use(
     openapi({
@@ -28,6 +29,7 @@ const app = new Elysia({ prefix: "/api" })
   .use(clients)
   .use(productService)
   .use(lineItems)
+  .use(invoices)
   .listen(3000);
 
 console.log(

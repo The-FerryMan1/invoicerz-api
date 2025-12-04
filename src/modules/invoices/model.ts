@@ -24,7 +24,7 @@ export namespace InvoicesModel {
     subtotal: t.Numeric(),
     taxRate: t.Numeric(),
     totalAmount: t.Numeric(),
-    notes: t.String(),
+    notes: t.Union([t.String(), t.Null()]),
   });
 
   export type invoiceResponse = typeof invoiceResponse.static;
@@ -34,4 +34,8 @@ export namespace InvoicesModel {
   });
 
   export type invoiceParams = typeof invoiceParams.static;
+
+  export const invoiceResponseArray = t.Array(invoiceResponse);
+
+  export type invoiceResponseArray = typeof invoiceResponseArray.static;
 }
