@@ -135,8 +135,8 @@ export namespace InvoicesService {
         totalAmount: Invoices.totalAmount,
         discount: Invoices.discount,
         notes: Invoices.notes,
-        clientName: Clients.companyName,
-        client: Clients.addressCity,
+        companyName: Clients.companyName,
+        clientAdress: sql`${Clients.addressStreet}, ${Clients.addressCity}, ${Clients.addressCountry}`,
       })
       .from(Invoices)
       .innerJoin(Clients, eq(Invoices.clientID, Clients.id))

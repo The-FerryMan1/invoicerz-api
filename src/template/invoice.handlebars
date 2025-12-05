@@ -1,26 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Invoice {{invoiceNumber}}</title>
+    <title>Invoice {{invoices.invoiceNumber}}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .container { width: 21cm; min-height: 29.7cm; margin: 0 auto; padding: 2cm; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .item-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .item-table th, .item-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        /* --- General Reset & Typography --- */
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f8f8; }
+        .container { 
+            width: 21cm; 
+            min-height: 29.7cm; 
+            margin: 0 auto; 
+            padding: 3cm 2cm; /* Increased padding for better margins */
+            background-color: white; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+        }
+
+        /* --- Header & Branding --- */
+        .branding { color: #007bff; /* Primary Brand Color */ }
+        .invoice-details { text-align: right; }
+        .invoice-details h1 { font-size: 2.5em; color: #333; margin: 0 0 10px 0; }
+        .invoice-details p { margin: 2px 0; font-size: 0.9em; }
+
+        .header-section { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 40px; 
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff; /* Brand color separator */
+        }
+
+        /* --- Seller and Client Info --- */
+        .address-box { 
+            width: 45%; 
+            padding: 10px; 
+            border-left: 4px solid #007bff; /* Visual emphasis */
+            margin-bottom: 30px;
+        }
+        .address-box strong { display: block; margin-bottom: 5px; font-size: 1.1em; }
+        
+        /* --- Item Table --- */
+        .item-table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        .item-table thead th { 
+            background-color: #007bff; 
+            color: white; 
+            font-weight: bold; 
+            padding: 12px 8px; 
+            border: none;
+        }
+        .item-table tbody td { 
+            border-bottom: 1px solid #eee; /* Light horizontal lines */
+            padding: 10px 8px; 
+            vertical-align: top;
+        }
+        .item-table tr:nth-child(even) { background-color: #f9f9f9; } /* Zebra striping */
+
+        /* --- Totals Summary --- */
+        .totals-summary { 
+            width: 300px; 
+            float: right; 
+            margin-top: 30px; 
+            border: 1px solid #ccc;
+        }
+        .totals-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 8px 15px; 
+            border-bottom: 1px solid #eee;
+        }
+        .totals-row.final { 
+            background-color: #007bff; 
+            color: white; 
+            font-size: 1.2em; 
+            font-weight: bold;
+        }
+
+        /* --- Footer --- */
+        .footer { 
+            position: fixed; 
+            bottom: 1cm; 
+            left: 50%; 
+            transform: translateX(-50%);
+            font-size: 0.8em; 
+            color: #666; 
+            text-align: center;
+        }
         @media print {
-            @page { margin: 1cm; }
-            .footer { position: fixed; bottom: 0; }
+            .footer { position: fixed; bottom: 1cm; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>INVOICE</h1>
-            <div>
-                <p>Invoice #: <strong>{{invoiceNumber}}</strong></p>
-                <p>Date: {{issueDate}}</p>
+        
+        <div class="header-section">
+            <div class="branding">
+                <h2>Invoicerz</h2>
+                <p>123 Business Avenue, Manila, Philippines</p>
+            </div>
+            <div class="invoice-details">
+                <h1>INVOICE</h1>
+                <p>Invoice #: <strong>{{invoices.invoiceNumber}}</strong></p>
+                <p>Status: {{invoices.status}}</p>
+                <p>Issue Date: {{invoices.issueDate}}</p>
+                <p>Due Date: {{invoices.dueDate}}</p>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between;">
+            <div class="address-box">
+                <strong>BILL TO:</strong>
+                <p>{{invoices.companyName}}</p>
+                <p>{{invoices.clientAdress}}</p>
+            </div>
+            <div class="address-box">
+                <strong>FROM:</strong>
+                <p>Invoicer</p>
+                <p>Billing Contact: invoicer@yourcompany.com</p>
             </div>
         </div>
 
@@ -28,25 +122,51 @@
             <thead>
                 <tr>
                     <th>Description</th>
-                    <th>Qty</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
+                    <th style="width: 10%;">Qty</th>
+                    <th style="width: 15%; text-align: right;">Unit Price</th>
+                    <th style="width: 15%; text-align: right;">Line Total</th>
                 </tr>
             </thead>
             <tbody>
-                {{#each lineItems}}
+                {{#each items}}
                 <tr>
                     <td>{{description}}</td>
                     <td>{{quantity}}</td>
-                    <td>${{unitPrice}}</td>
-                    <td>${{lineTotal}}</td>
+                    <td style="text-align: right;">P {{unitPrice}}</td>
+                    <td style="text-align: right;">P {{lineTotal}}</td>
                 </tr>
                 {{/each}}
             </tbody>
         </table>
 
+        <div class="totals-summary">
+            <div class="totals-row">
+                <span>Subtotal:</span>
+                <span>P{{invoices.subtotal}}</span>
+            </div>
+            <div class="totals-row">
+                <span>Discount:</span>
+                <span style="color: red;">-P{{invoices.discount}}</span> 
+            </div>
+            <div class="totals-row">
+                <span>Tax rate:</span>
+                <span>{{invoices.taxRate}}%</span> 
+            </div>
+            <div class="totals-row final">
+                <span>TOTAL AMOUNT DUE:</span>
+                <span>P{{invoices.totalAmount}}</span>
+            </div>
+        </div>
+        
+        {{#if invoices.notes}}
+        <div style="clear: both; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
+            <strong>Notes:</strong>
+            <p>{{invoices.notes}}</p>
+        </div>
+        {{/if}}
+
         <div class="footer">
-            Thank you for your business.
+            Thank you for your business. Payment is due within 30 days.
         </div>
     </div>
 </body>

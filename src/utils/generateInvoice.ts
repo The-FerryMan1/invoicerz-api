@@ -11,7 +11,8 @@ interface Data {
 }
 export async function generateInvoicePDF(data: Data) {
   const templatePath = path.join(
-    process.cwd(),
+    import.meta.dir,
+    "..",
     "template",
     "invoice.handlebars"
   );
