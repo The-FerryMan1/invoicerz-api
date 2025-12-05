@@ -2,7 +2,7 @@ import { t } from "elysia";
 
 export namespace GlobalModel {
   export const paginationQuery = t.Object({
-    page: t.String(),
+    page: t.String({ default: "1" }),
     limit: t.String({ default: "10" }),
   });
 
