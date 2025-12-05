@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { betterAuth } from "../../middleware/betterAuth";
 import { ProductServiceModel } from "./model";
 import { ProductServiceService } from "./service";
+import { GlobalModel } from "../../model/global.model";
 
 export const productService = new Elysia({ prefix: "/productService" })
   .use(betterAuth)
@@ -25,15 +26,19 @@ export const productService = new Elysia({ prefix: "/productService" })
   )
   .get(
     "/",
-    async ({ user, set }) => {
-      const response = await ProductServiceService.readProductService(user.id);
+    async ({ user, set, query: { limit, page } }) => {
+      const response = await ProductServiceService.readProductService(
+        { limit, page },
+        user.id
+      );
       set.status = 200;
       return response;
     },
     {
       auth: true,
+      query: GlobalModel.paginationQuery,
       response: {
-        200: ProductServiceModel.productServiceResponseArray,
+        200: GlobalModel.pagination,
       },
     }
   )

@@ -1,8 +1,9 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, desc } from "drizzle-orm";
 import { db } from "../../database";
 import { Invoices } from "../../database/schema/schema";
 import { InvoicesModel } from "./model";
 import { status } from "elysia";
+import { GlobalModel } from "../../model/global.model";
 
 export namespace InvoicesService {
   export async function createInvoiceHeader(
@@ -35,12 +36,34 @@ export namespace InvoicesService {
     return newInvoiceHeader;
   }
 
-  export async function readInvoices(userID: string) {
+  export async function readInvoices(
+    { page, limit }: GlobalModel.paginationQuery,
+    userID: string
+  ) {
+    const offset = (Number(page) - 1) * Number(limit);
     const invoices = await db
       .select()
       .from(Invoices)
+      .orderBy(desc(Invoices.createdAt))
+      .offset(offset)
+      .limit(Number(limit))
       .where(eq(Invoices.userID, userID));
-    return invoices;
+    const totalClient = await db.$count(Invoices, eq(Invoices.userID, userID));
+
+    const totalPages = Math.ceil(totalClient) || 0;
+
+    const pagination: GlobalModel.pagination = {
+      record: invoices,
+      meta: {
+        currentPage: Number(page),
+        limit: Number(limit),
+        recordsOnPage: invoices.length,
+        totalPages,
+        totalRecord: totalClient,
+      },
+    };
+
+    return pagination;
   }
 
   export async function readInvoicesByID(

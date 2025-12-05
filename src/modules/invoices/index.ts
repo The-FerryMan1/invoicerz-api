@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { betterAuth } from "../../middleware/betterAuth";
 import { InvoicesModel } from "./model";
 import { InvoicesService } from "./service";
+import { GlobalModel } from "../../model/global.model";
 
 export const invoices = new Elysia({ prefix: "invoices" })
   .use(betterAuth)
@@ -22,15 +23,19 @@ export const invoices = new Elysia({ prefix: "invoices" })
   )
   .get(
     "/",
-    async ({ user, set }) => {
-      const response = await InvoicesService.readInvoices(user.id);
+    async ({ user, set, query: { limit, page } }) => {
+      const response = await InvoicesService.readInvoices(
+        { limit, page },
+        user.id
+      );
       set.status = 200;
       return response;
     },
     {
       auth: true,
+      query: GlobalModel.paginationQuery,
       response: {
-        200: InvoicesModel.invoiceResponseArray,
+        200: GlobalModel.pagination,
       },
     }
   )

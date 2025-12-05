@@ -6,6 +6,7 @@ import {
   pgEnum,
   pgTable,
   text,
+  timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
@@ -33,6 +34,8 @@ export const Clients = pgTable("client", {
   addressCity: varchar("address_city", { length: 100 }),
   addressZip: varchar("address_zip", { length: 20 }),
   addressCountry: varchar("address_country", { length: 100 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const Invoices = pgTable("invoice", {
@@ -74,6 +77,8 @@ export const Invoices = pgTable("invoice", {
     .notNull()
     .default(0.0),
   notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const ProductService = pgTable("productservice", {
@@ -89,6 +94,8 @@ export const ProductService = pgTable("productservice", {
     scale: 2,
   }).notNull(),
   isService: boolean("is_service").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const LineItems = pgTable("lineitems", {
@@ -118,4 +125,6 @@ export const LineItems = pgTable("lineitems", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });

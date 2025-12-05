@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { betterAuth } from "../../middleware/betterAuth";
 import { ClientModel } from "./model";
 import { ClientService } from "./service";
+import { GlobalModel } from "../../model/global.model";
 export const clients = new Elysia({ prefix: "clients" })
   .use(betterAuth)
   .post(
@@ -21,15 +22,19 @@ export const clients = new Elysia({ prefix: "clients" })
   )
   .get(
     "/",
-    async ({ user, set }) => {
-      const response = await ClientService.readClients(user.id);
+    async ({ user, set, query: { limit, page } }) => {
+      const response = await ClientService.readClients(
+        { limit, page },
+        user.id
+      );
       set.status = 200;
       return response;
     },
     {
       auth: true,
+      query: GlobalModel.paginationQuery,
       response: {
-        200: ClientModel.clientResponseArray,
+        200: GlobalModel.pagination,
       },
     }
   )

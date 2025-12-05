@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db } from "../../database";
 import { ProductService } from "../../database/schema/schema";
 import { ProductServiceModel } from "./model";
 import { status } from "elysia";
+import { GlobalModel } from "../../model/global.model";
 
 export namespace ProductServiceService {
   export async function createProductServie(
@@ -28,13 +29,38 @@ export namespace ProductServiceService {
     return newProductService;
   }
 
-  export async function readProductService(userID: string) {
+  export async function readProductService(
+    { limit, page }: GlobalModel.paginationQuery,
+    userID: string
+  ) {
+    const offset = (Number(page) - 1) * Number(limit);
     const productServices = await db
       .select()
       .from(ProductService)
-      .where(eq(ProductService.userID, userID));
+      .where(eq(ProductService.userID, userID))
+      .orderBy(desc(ProductService.createdAt))
+      .offset(offset)
+      .limit(Number(limit));
 
-    return productServices;
+    const totalClient = await db.$count(
+      ProductService,
+      eq(ProductService.userID, userID)
+    );
+
+    const totalPages = Math.ceil(totalClient) || 0;
+
+    const pagination: GlobalModel.pagination = {
+      record: productServices,
+      meta: {
+        currentPage: Number(page),
+        limit: Number(limit),
+        recordsOnPage: productServices.length,
+        totalPages,
+        totalRecord: totalClient,
+      },
+    };
+
+    return pagination;
   }
 
   export async function readProductServiceByID(

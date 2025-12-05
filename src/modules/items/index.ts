@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { betterAuth } from "../../middleware/betterAuth";
 import { ItemsModel } from "./model";
 import { ItemsService } from "./service";
+import { GlobalModel } from "../../model/global.model";
 
 export const lineItems = new Elysia({ prefix: "lineItems" })
   .use(betterAuth)
@@ -22,15 +23,19 @@ export const lineItems = new Elysia({ prefix: "lineItems" })
   )
   .get(
     "/",
-    async ({ user, set }) => {
-      const response = await ItemsService.readLineItems(user.id);
+    async ({ user, set, query: { limit, page } }) => {
+      const response = await ItemsService.readLineItems(
+        { limit, page },
+        user.id
+      );
       set.status = 200;
       return response;
     },
     {
       auth: true,
+      query: GlobalModel.paginationQuery,
       response: {
-        200: ItemsModel.itemsResponseArray,
+        200: GlobalModel.pagination,
       },
     }
   )

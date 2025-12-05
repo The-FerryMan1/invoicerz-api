@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../../database";
 import { Clients } from "../../database/schema/schema";
 import { ClientModel } from "./model";
 import { status } from "elysia";
+import { GlobalModel } from "../../model/global.model";
 
 export namespace ClientService {
   export async function createClient(
@@ -37,13 +38,34 @@ export namespace ClientService {
   }
 
   export async function readClients(
+    { page, limit }: GlobalModel.paginationQuery,
     userID: string
-  ): Promise<ClientModel.clientResponse[]> {
+  ) {
+    const offset = (Number(page) - 1) * Number(limit);
     const clients = await db
       .select()
       .from(Clients)
-      .where(eq(Clients.userID, userID));
-    return clients;
+      .where(eq(Clients.userID, userID))
+      .orderBy(desc(Clients.createdAt))
+      .offset(offset)
+      .limit(Number(limit));
+
+    const totalClient = await db.$count(Clients, eq(Clients.userID, userID));
+
+    const totalPages = Math.ceil(totalClient) || 0;
+
+    const pagination: GlobalModel.pagination = {
+      record: clients,
+      meta: {
+        currentPage: Number(page),
+        limit: Number(limit),
+        recordsOnPage: clients.length,
+        totalPages,
+        totalRecord: totalClient,
+      },
+    };
+
+    return pagination;
   }
 
   export async function readClientByID(
@@ -94,6 +116,7 @@ export namespace ClientService {
         contactPerson,
         email,
         phone,
+        updatedAt: new Date(Date.now()),
       })
       .where(and(eq(Clients.id, clientIDInt), eq(Clients.userID, userID)))
       .returning();

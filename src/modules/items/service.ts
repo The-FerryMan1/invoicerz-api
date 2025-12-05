@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, desc } from "drizzle-orm";
 import { db } from "../../database";
 import {
   Invoices,
@@ -7,6 +7,7 @@ import {
 } from "../../database/schema/schema";
 import { ItemsModel } from "./model";
 import { status } from "elysia";
+import { GlobalModel } from "../../model/global.model";
 
 export namespace ItemsService {
   export async function createLineItem(
@@ -76,12 +77,37 @@ export namespace ItemsService {
     return newLineitem;
   }
 
-  export async function readLineItems(userID: string) {
+  export async function readLineItems(
+    { limit, page }: GlobalModel.paginationQuery,
+    userID: string
+  ) {
+    const offset = (Number(page) - 1) * Number(limit);
     const lineItems = await db
       .select()
       .from(LineItems)
-      .where(eq(LineItems.userID, userID));
-    return lineItems;
+      .where(eq(LineItems.userID, userID))
+      .orderBy(desc(LineItems.createdAt))
+      .offset(offset)
+      .limit(Number(limit));
+    const totalClient = await db.$count(
+      LineItems,
+      eq(LineItems.userID, userID)
+    );
+
+    const totalPages = Math.ceil(totalClient) || 0;
+
+    const pagination: GlobalModel.pagination = {
+      record: lineItems,
+      meta: {
+        currentPage: Number(page),
+        limit: Number(limit),
+        recordsOnPage: lineItems.length,
+        totalPages,
+        totalRecord: totalClient,
+      },
+    };
+
+    return pagination;
   }
 
   export async function readLineItemByID(
