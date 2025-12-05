@@ -1,9 +1,10 @@
 import { and, eq, sql, desc } from "drizzle-orm";
 import { db } from "../../database";
-import { Invoices } from "../../database/schema/schema";
+import { Clients, Invoices, LineItems } from "../../database/schema/schema";
 import { InvoicesModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
+import { generateInvoicePDF } from "../../utils/generateInvoice";
 
 export namespace InvoicesService {
   export async function createInvoiceHeader(
@@ -111,6 +112,54 @@ export namespace InvoicesService {
       );
 
     return updatedInvoice;
+  }
+
+  export async function generateInvoice(
+    { invoiceID }: InvoicesModel.invoiceParams,
+    userID: string
+  ) {
+    const invoiceIDInt = Number(invoiceID);
+    if (isNaN(invoiceIDInt))
+      throw status(400, "Bad Request: Parameter should be numeric.");
+
+    const [invoice] = await db
+      .select({
+        id: Invoices.id,
+        clientID: Invoices.id,
+        invoiceNumber: Invoices.invoiceNumber,
+        issueDate: Invoices.issueDate,
+        dueDate: Invoices.dueDate,
+        status: Invoices.status,
+        subtotal: Invoices.subtotal,
+        taxRate: Invoices.taxRate,
+        totalAmount: Invoices.totalAmount,
+        discount: Invoices.discount,
+        notes: Invoices.notes,
+        clientName: Clients.companyName,
+        client: Clients.addressCity,
+      })
+      .from(Invoices)
+      .innerJoin(Clients, eq(Invoices.clientID, Clients.id))
+      .where(and(eq(Invoices.id, invoiceIDInt), eq(Invoices.userID, userID)));
+
+    if (!invoice) throw status(404, "Not Found or Access denied.");
+
+    const lineItems = await db
+      .select()
+      .from(LineItems)
+      .orderBy(desc(LineItems.createdAt))
+      .where(
+        and(eq(LineItems.invoiceID, invoiceIDInt), eq(LineItems.userID, userID))
+      );
+    const taxableBase = invoice.subtotal - invoice.discount;
+    const totalTaxAmount = taxableBase * (invoice.taxRate / 100);
+
+    const invoicePDF = await generateInvoicePDF({
+      invoices: invoice,
+      items: lineItems,
+    });
+
+    return invoicePDF;
   }
 
   //soft delete upcoming

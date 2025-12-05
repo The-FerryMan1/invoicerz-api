@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice {{invoiceNumber}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { width: 21cm; min-height: 29.7cm; margin: 0 auto; padding: 2cm; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .item-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .item-table th, .item-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        @media print {
+            @page { margin: 1cm; }
+            .footer { position: fixed; bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>INVOICE</h1>
+            <div>
+                <p>Invoice #: <strong>{{invoiceNumber}}</strong></p>
+                <p>Date: {{issueDate}}</p>
+            </div>
+        </div>
+
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each lineItems}}
+                <tr>
+                    <td>{{description}}</td>
+                    <td>{{quantity}}</td>
+                    <td>${{unitPrice}}</td>
+                    <td>${{lineTotal}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        <div class="footer">
+            Thank you for your business.
+        </div>
+    </div>
+</body>
+</html>

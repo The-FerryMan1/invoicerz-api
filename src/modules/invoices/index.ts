@@ -57,6 +57,21 @@ export const invoices = new Elysia({ prefix: "invoices" })
       },
     }
   )
+  .get(
+    "/:invoiceID/generate",
+    async ({ user, set, params: { invoiceID } }) => {
+      const response = await InvoicesService.generateInvoice(
+        { invoiceID },
+        user.id
+      );
+      set.status = 200;
+      return response;
+    },
+    {
+      auth: true,
+      params: InvoicesModel.invoiceParams,
+    }
+  )
   .put(
     "/:invoiceID",
     async ({ user, set, body, params: { invoiceID } }) => {
