@@ -26,7 +26,6 @@ export const auth = betterAuth({
   },
 
   plugins: [openAPI()],
-  //... the rest of your config
 });
 
 let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>;
