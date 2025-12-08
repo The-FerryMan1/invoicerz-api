@@ -7,6 +7,7 @@ import { openAPI } from "better-auth/plugins";
 
 export const auth = betterAuth({
   basePath: "/api/auth",
+  trustedOrigins: ["http://localhost:5173"],
   database: drizzleAdapter(db, {
     provider: "pg", // or "pg" or "mysql"
     schema: authSchema,
