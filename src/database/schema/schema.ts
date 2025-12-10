@@ -10,6 +10,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { main } from "../seed/seeder";
 
 export enum InvoicesStatusEnum {
   Draft = "Draft",
@@ -128,3 +129,5 @@ export const LineItems = pgTable("lineitems", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
+
+// main();
