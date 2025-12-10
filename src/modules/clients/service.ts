@@ -19,6 +19,9 @@ export namespace ClientService {
     }: ClientModel.clientBody,
     userID: string
   ): Promise<ClientModel.clientBody> {
+    const emailCheck = await db.$count(Clients, eq(Clients.email, email));
+    if (emailCheck !== 0) throw status(400, "Email already exist.");
+
     const [newClient] = await db
       .insert(Clients)
       .values({
@@ -52,7 +55,7 @@ export namespace ClientService {
 
     const totalClient = await db.$count(Clients, eq(Clients.userID, userID));
 
-    const totalPages = Math.ceil(totalClient) || 0;
+    const totalPages = Math.ceil(totalClient / Number(limit)) || 0;
 
     const pagination: GlobalModel.pagination = {
       record: clients,
