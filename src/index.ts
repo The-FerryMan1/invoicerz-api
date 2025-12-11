@@ -15,7 +15,7 @@ const app = new Elysia({ prefix: "/api" })
         components: await OpenAPI.components,
         paths: await OpenAPI.getPaths(),
       },
-    })
+    }),
   )
   .use(
     cors({
@@ -23,7 +23,7 @@ const app = new Elysia({ prefix: "/api" })
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
-    })
+    }),
   )
   .mount(auth.handler)
   .use(clients)
@@ -32,5 +32,5 @@ const app = new Elysia({ prefix: "/api" })
   .use(invoices)
   .listen(Bun.env.PORT! || 3000);
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
