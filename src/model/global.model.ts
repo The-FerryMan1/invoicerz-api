@@ -3,6 +3,7 @@ import { t } from "elysia";
 export namespace GlobalModel {
   export const paginationQuery = t.Object({
     page: t.String({ default: "1" }),
+    search: t.Optional(t.String()),
     limit: t.String({ default: "10" }),
   });
 
@@ -25,3 +26,4 @@ export namespace GlobalModel {
 
   export type pagination = typeof pagination.static;
 }
+

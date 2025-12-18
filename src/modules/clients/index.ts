@@ -22,9 +22,9 @@ export const clients = new Elysia({ prefix: "clients" })
   )
   .get(
     "/",
-    async ({ user, set, query: { limit, page } }) => {
+    async ({ user, set, query: { limit, page, search} }) => {
       const response = await ClientService.readClients(
-        { limit, page },
+        { limit, page, search },
         user.id
       );
       set.status = 200;
@@ -87,4 +87,13 @@ export const clients = new Elysia({ prefix: "clients" })
       auth: true,
       params: ClientModel.clientIDParam,
     }
-  );
+  )
+  .get('/export', async ({user,set}) => {
+      const response = await ClientService.getCSV(user.id)
+      set.status = response?200:500
+      set.headers['content-type'] = "text/csv"
+      set.headers['content-disposition'] = `attachment; filename="cliets_${Date.now()}.csv"`
+      return response
+  },{
+    auth: true
+  })

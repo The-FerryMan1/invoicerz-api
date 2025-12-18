@@ -1,9 +1,10 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ilike, like, or, SQL } from "drizzle-orm";
 import { db } from "../../database";
 import { Clients } from "../../database/schema/schema";
 import { ClientModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
+import { csvExporter } from "../../utils/csvExported";
 
 export namespace ClientService {
   export async function createClient(
@@ -41,14 +42,33 @@ export namespace ClientService {
   }
 
   export async function readClients(
-    { page, limit }: GlobalModel.paginationQuery,
+    { page, limit, search }: GlobalModel.paginationQuery,
     userID: string
   ) {
     const offset = (Number(page) - 1) * Number(limit);
+
+    const searchFilter:SQL[] = []
+
+
+    if(search) {
+      const items = `%${String(search)}%`
+      searchFilter.push(
+        
+        ilike(Clients.companyName, items),
+        ilike(Clients.email, items),
+        ilike(Clients.addressCity, items),
+        ilike(Clients.addressCountry, items),
+        ilike(Clients.addressStreet, items),
+        ilike(Clients.addressZip, items),
+        ilike(Clients.contactPerson, items),
+        ilike(Clients.phone, items),
+      )
+    }
+
     const clients = await db
       .select()
       .from(Clients)
-      .where(eq(Clients.userID, userID))
+      .where(and(eq(Clients.userID, userID), or(...searchFilter)))
       .orderBy(desc(Clients.createdAt))
       .offset(offset)
       .limit(Number(limit));
@@ -146,5 +166,15 @@ export namespace ClientService {
     if (!deletedClientID) throw status(404, "Not Found");
 
     return;
+  }
+
+  export async function getCSV(userID:string) {
+
+    const client = await db.select().from(Clients).where(eq(Clients.userID, userID))
+    
+
+    const csv = await csvExporter<typeof client[0]>(client, 'clients')
+
+    return csv
   }
 }
