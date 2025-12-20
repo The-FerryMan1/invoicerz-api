@@ -1,4 +1,4 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, SQL, ilike } from "drizzle-orm";
 import { db } from "../../database";
 import { ProductService } from "../../database/schema/schema";
 import { ProductServiceModel } from "./model";
@@ -30,14 +30,25 @@ export namespace ProductServiceService {
   }
 
   export async function readProductService(
-    { limit, page }: GlobalModel.paginationQuery,
+    { limit, page, search }: GlobalModel.paginationQuery,
     userID: string
   ) {
     const offset = (Number(page) - 1) * Number(limit);
+    const searchFilter:SQL[] = [] 
+    if(search){
+      const items = `%${search as string}%`
+      searchFilter.push(
+                ilike(ProductService.name, items),
+                ilike(ProductService.description, items),
+                
+      )
+
+    }
+
     const productServices = await db
       .select()
       .from(ProductService)
-      .where(eq(ProductService.userID, userID))
+      .where(and(eq(ProductService.userID, userID), ...searchFilter))
       .orderBy(desc(ProductService.createdAt))
       .offset(offset)
       .limit(Number(limit));

@@ -26,9 +26,9 @@ export const productService = new Elysia({ prefix: "/productService" })
   )
   .get(
     "/",
-    async ({ user, set, query: { limit, page } }) => {
+    async ({ user, set, query: { limit, page, search } }) => {
       const response = await ProductServiceService.readProductService(
-        { limit, page },
+        { limit, page, search },
         user.id
       );
       set.status = 200;
