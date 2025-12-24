@@ -16,6 +16,8 @@ export namespace ProductServiceModel {
     description: t.Union([t.String(), t.Null()]),
     unitPrice: t.Numeric(),
     isService: t.Boolean(),
+    createdAt: t.Union([t.String(), t.Date()]),
+    updatedAt: t.Union([t.String(), t.Null(), t.Date()])
   });
   export type productServiceResponse = typeof productServiceResponse.static;
 

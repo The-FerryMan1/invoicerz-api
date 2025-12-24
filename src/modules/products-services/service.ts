@@ -4,6 +4,7 @@ import { ProductService } from "../../database/schema/schema";
 import { ProductServiceModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
+import { csvExporter } from "../../utils/csvExported";
 
 export namespace ProductServiceService {
   export async function createProductServie(
@@ -164,4 +165,13 @@ export namespace ProductServiceService {
 
     return;
   }
+    export async function getCSV(userID:string) {
+  
+      const productService = await db.select().from(ProductService).where(eq(ProductService.userID, userID))
+      
+  
+      const csv = await csvExporter<typeof productService[0]>(productService, 'clients')
+  
+      return csv
+    }
 }

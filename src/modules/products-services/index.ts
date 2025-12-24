@@ -95,4 +95,12 @@ export const productService = new Elysia({ prefix: "/productService" })
       auth: true,
       params: ProductServiceModel.productServiceParams,
     }
-  );
+  ).get('/export', async ({user,set}) => {
+        const response = await ProductServiceService.getCSV(user.id)
+        set.status = response?200:500
+        set.headers['content-type'] = "text/csv"
+        set.headers['content-disposition'] = `attachment; filename="productSerive_${Date.now()}.csv"`
+        return response
+    },{
+      auth: true
+    })
