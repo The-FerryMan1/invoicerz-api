@@ -88,4 +88,12 @@ export const lineItems = new Elysia({ prefix: "lineItems" })
       auth: true,
       params: ItemsModel.itemsParams,
     }
-  );
+  ).get('/export', async ({user,set}) => {
+          const response = await ItemsService.getCSV(user.id)
+          set.status = response?200:500
+          set.headers['content-type'] = "text/csv"
+          set.headers['content-disposition'] = `attachment; filename="lineItems${Date.now()}.csv"`
+          return response
+      },{
+        auth: true
+      })

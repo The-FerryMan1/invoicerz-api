@@ -1,4 +1,4 @@
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, sql, desc, SQL, ilike } from "drizzle-orm";
 import { db } from "../../database";
 import {
   Invoices,
@@ -8,6 +8,7 @@ import {
 import { ItemsModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
+import { csvExporter } from "../../utils/csvExported";
 
 export namespace ItemsService {
   export async function createLineItem(
@@ -78,14 +79,25 @@ export namespace ItemsService {
   }
 
   export async function readLineItems(
-    { limit, page }: GlobalModel.paginationQuery,
+    { limit, page, search }: GlobalModel.paginationQuery,
     userID: string
   ) {
     const offset = (Number(page) - 1) * Number(limit);
+
+    const searchFilter:SQL[] = [] 
+        if(search){
+          const items = `%${search as string}%`
+          searchFilter.push(
+                    ilike(ProductService.name, items),
+                    ilike(ProductService.description, items),
+                    
+          )
+    
+        }
     const lineItems = await db
       .select()
       .from(LineItems)
-      .where(eq(LineItems.userID, userID))
+      .where(and(eq(LineItems.userID, userID), ...searchFilter))
       .orderBy(desc(LineItems.createdAt))
       .offset(offset)
       .limit(Number(limit));
@@ -254,4 +266,13 @@ export namespace ItemsService {
     if (!deletedLineItemID) throw status(404, "Not Found or Access denied.");
     return;
   }
+  export async function getCSV(userID:string) {
+    
+        const productService = await db.select().from(ProductService).where(eq(ProductService.userID, userID))
+        
+    
+        const csv = await csvExporter<typeof productService[0]>(productService, 'clients')
+    
+        return csv
+      }
 }

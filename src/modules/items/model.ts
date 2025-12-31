@@ -19,6 +19,8 @@ export namespace ItemsModel {
     quantity: t.Number(),
     unitPrice: t.Number(),
     lineTotal: t.Numeric(),
+    createdAt: t.Date(),
+    updatedAt: t.Union([t.Date(), t.Null()])
   });
 
   export type itemsResponse = typeof itemsResponse.static;
