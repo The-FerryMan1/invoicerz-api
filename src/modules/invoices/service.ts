@@ -87,7 +87,7 @@ export namespace InvoicesService {
 
   export async function updateInvoice(
     { invoiceID }: InvoicesModel.invoiceParams,
-    { clientID, dueDate, notes, taxRate }: InvoicesModel.invoiceBody,
+    { clientID, dueDate, notes, taxRate,discount }: InvoicesModel.invoiceBody,
     userID: string
   ) {
     const invoiceIDInt = Number(invoiceID);
@@ -98,9 +98,10 @@ export namespace InvoicesService {
       .update(Invoices)
       .set({
         clientID,
-        dueDate: String(dueDate),
+        dueDate: dueDate.toISOString(),
         notes,
         taxRate,
+        discount
       })
       .where(and(eq(Invoices.id, invoiceIDInt), eq(Invoices.userID, userID)))
       .returning();
