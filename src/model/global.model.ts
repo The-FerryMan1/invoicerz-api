@@ -25,5 +25,20 @@ export namespace GlobalModel {
   });
 
   export type pagination = typeof pagination.static;
+
+
+  export enum filterType{ 
+    daily = 'daily',
+    weekly = 'weekly',
+    monthly ='monthly',
+    all = 'all',
+    custom = 'custom'
+  }  
+  export const period = t.Object({
+    period: t.Enum(filterType)
+  }) 
+ 
+
+  export type period = typeof period.static;
 }
 

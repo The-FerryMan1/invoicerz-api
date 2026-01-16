@@ -1,10 +1,11 @@
-import { and, desc, eq, ilike, like, or, SQL } from "drizzle-orm";
+import { and, count, desc, eq, gt, gte, ilike, like, lt, lte, or, sql, SQL } from "drizzle-orm";
 import { db } from "../../database";
 import { Clients } from "../../database/schema/schema";
 import { ClientModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
 import { csvExporter } from "../../utils/csvExported";
+import { periodFilter } from "../../utils/periodFilter";
 
 export namespace ClientService {
   export async function createClient(
@@ -47,13 +48,13 @@ export namespace ClientService {
   ) {
     const offset = (Number(page) - 1) * Number(limit);
 
-    const searchFilter:SQL[] = []
+    const searchFilter: SQL[] = []
 
 
-    if(search) {
+    if (search) {
       const items = `%${String(search)}%`
       searchFilter.push(
-        
+
         ilike(Clients.companyName, items),
         ilike(Clients.email, items),
         ilike(Clients.addressCity, items),
@@ -168,13 +169,35 @@ export namespace ClientService {
     return;
   }
 
-  export async function getCSV(userID:string) {
+  export async function getCSV(userID: string) {
 
     const client = await db.select().from(Clients).where(eq(Clients.userID, userID))
-    
+
 
     const csv = await csvExporter<typeof client[0]>(client, 'clients')
 
     return csv
+  }
+
+  export async function calculateClient(userID: string, { period }: GlobalModel.period) {
+
+    let periodSqlFilter:SQL[] = []
+    if(period !== GlobalModel.filterType.all){
+      const { startDate, endDate } = periodFilter({ period })
+      periodSqlFilter.push(
+        gte(Clients.createdAt, new Date(startDate.toISOString())),
+        lte(Clients.createdAt, new Date(endDate.toISOString()))
+      )
+    }
+    const [client] = await db
+    .select({clientCount:count()})
+    .from(Clients)
+    .where(
+      and(
+        eq(Clients.userID, userID), 
+        ...periodSqlFilter
+      )
+    )
+    return client
   }
 }

@@ -1,10 +1,11 @@
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, sql, desc, ilike, SQL, gte, lte, count } from "drizzle-orm";
 import { db } from "../../database";
 import { Clients, Invoices, LineItems } from "../../database/schema/schema";
 import { InvoicesModel } from "./model";
 import { status } from "elysia";
 import { GlobalModel } from "../../model/global.model";
 import { generateInvoicePDF } from "../../utils/generateInvoice";
+import { periodFilter } from "../../utils/periodFilter";
 
 export namespace InvoicesService {
   export async function createInvoiceHeader(
@@ -38,10 +39,20 @@ export namespace InvoicesService {
   }
 
   export async function readInvoices(
-    { page, limit }: GlobalModel.paginationQuery,
+    { page, limit, search }: GlobalModel.paginationQuery,
     userID: string
   ) {
     const offset = (Number(page) - 1) * Number(limit);
+    const searchFilter:SQL[] = [] 
+    if(search){
+      const items = `%${search as string}%`
+      searchFilter.push(
+                ilike(Invoices.invoiceNumber, items),
+                ilike(Invoices.notes, items),
+                
+      )
+
+    }
     const invoices = await db
       .select()
       .from(Invoices)
@@ -179,5 +190,27 @@ export namespace InvoicesService {
       .returning({ id: Invoices.id });
     if (!deletedInvoice) throw status(404, "Not Found or Access denied.");
     return;
+  }
+
+  export async function countInvoices(userID: string, {period}:GlobalModel.period){
+    let periodSqlFilter:SQL[] = []
+    if(period !== GlobalModel.filterType.all){
+      const { startDate, endDate } = periodFilter({ period })
+      periodSqlFilter.push(
+        gte(Invoices.createdAt, new Date(startDate.toISOString())),
+        lte(Invoices.createdAt, new Date(endDate.toISOString()))
+      )
+    }
+    const [invoices] = await db
+    .select({invoiceCount:count()})
+    .from(Invoices)
+    .where(
+      and(
+        eq(Invoices.userID, userID), 
+        ...periodSqlFilter
+      )
+    )
+    return invoices
+  
   }
 }

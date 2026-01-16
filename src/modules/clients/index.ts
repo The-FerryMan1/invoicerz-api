@@ -97,3 +97,11 @@ export const clients = new Elysia({ prefix: "clients" })
   },{
     auth: true
   })
+  .get('/total', async({user, set, query:period})=>{
+      const response = await ClientService.calculateClient(user.id, period)
+      set.status = 200
+      return response
+  },{
+    auth: true,
+    query: GlobalModel.period
+  })

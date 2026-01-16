@@ -106,4 +106,12 @@ export const invoices = new Elysia({ prefix: "invoices" })
       auth: true,
       params: InvoicesModel.invoiceParams,
     }
-  );
+  )
+  .get('/count', async({user, set, query:period})=>{
+    const response = await InvoicesService.countInvoices(user.id, period)
+    set.status = 200
+    return response
+  },{
+    auth: true,
+    query: GlobalModel.period
+  })
